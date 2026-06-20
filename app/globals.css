@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Custom Properties ─── */
+:root {
+  --ember:    #f97316;   /* orange-500 — fire glow, CTAs */
+  --coal:     #1a1a1a;   /* near-black background */
+  --plate:    #242424;   /* card/surface background */
+  --rim:      #333333;   /* border color */
+  --ash:      #888888;   /* muted text */
+  --gold:     #f59e0b;   /* amber-400 — prices, highlights */
+  --jade:     #10b981;   /* emerald-500 — served/success */
+  --sky:      #38bdf8;   /* sky-400 — preparing/info */
+}
+
+/* ─── Fonts ─── */
+@layer base {
+  body {
+    font-family: var(--font-lao), var(--font-inter), system-ui, sans-serif;
+    background-color: var(--coal);
+    color: #f5f5f5;
+  }
+
+  /* Lao script needs slightly larger base size for readability */
+  :lang(lo) {
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* ─── Utility classes ─── */
+@layer utilities {
+  .font-lao {
+    font-family: var(--font-lao), var(--font-inter), sans-serif;
+  }
+  .surface {
+    background-color: var(--plate);
+    border: 1px solid var(--rim);
+  }
+  .text-ash { color: var(--ash); }
+  .text-ember { color: var(--ember); }
+  .text-gold { color: var(--gold); }
+  .text-jade { color: var(--jade); }
+  .text-sky-400 { color: var(--sky); }
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--coal); }
+::-webkit-scrollbar-thumb { background: var(--rim); border-radius: 2px; }
+
+/* ─── Category tab indicator ─── */
+.cat-tab-active {
+  border-bottom: 2px solid var(--ember);
+  color: var(--ember);
+}
+
+/* ─── Fade-in animation for new kitchen tickets ─── */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in { animation: slideIn 0.35s ease-out; }
+
+/* ─── Pulse glow for pending orders ─── */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+  50%       { box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.25); }
+}
+.glow-pending { animation: glowPulse 2s ease-in-out infinite; }
+
+/* ─── Toast notification ─── */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.toast { animation: toastIn 0.3s ease-out; }
+
+/* ─── Status badge variants ─── */
+.badge-pending    { background: rgba(249,115,22,0.15); color: #fb923c; border: 1px solid rgba(249,115,22,0.3); }
+.badge-preparing  { background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); }
+.badge-served     { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+.badge-cancelled  { background: rgba(120,120,120,0.15); color: #888; border: 1px solid rgba(120,120,120,0.3); }
+
+/* ─── Mobile tap highlight removal ─── */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* ─── Smooth scroll ─── */
+html { scroll-behavior: smooth; }
