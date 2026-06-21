@@ -46,16 +46,21 @@ export default function MenuApp() {
         .single()
 
       if (table) {
-        setTableData(table)
-        // Use existing session or create new one
+        // Use existing session or claim a fresh one via the safe RPC function.
+        // (Direct UPDATEs to `tables` are now staff-only per RLS — customers
+        // claim a vacant table through this narrow, audited function instead.)
         let sid = table.current_session_id
         if (!sid) {
           sid = crypto.randomUUID()
-          await supabase
-            .from('tables')
-            .update({ status: 'active', current_session_id: sid })
-            .eq('id', table.id)
+          const { error: claimError } = await supabase.rpc('start_table_session', {
+            p_table_number: tableNumber,
+            p_session_id: sid,
+          })
+          if (claimError) {
+            console.error('Failed to claim table session:', claimError)
+          }
         }
+        setTableData({ ...table, current_session_id: sid })
         setSessionId(sid)
       }
 

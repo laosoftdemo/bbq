@@ -1,8 +1,11 @@
 'use client'
 // components/shared/StaffNav.js
 import Link from 'next/link'
+import { useStaffSession } from '@/hooks/useStaffSession'
 
 export default function StaffNav({ title, lang, onToggleLang }) {
+  const { staff, logout } = useStaffSession()
+
   return (
     <header className="bg-plate border-b border-rim px-4 py-3 flex items-center justify-between sticky top-0 z-30">
       <div className="flex items-center gap-4">
@@ -29,6 +32,22 @@ export default function StaffNav({ title, lang, onToggleLang }) {
           <span className="text-ash">/</span>
           <span className={lang === 'en' ? 'text-ember' : 'text-ash'}>EN</span>
         </button>
+        {/* Current staff + logout */}
+        {staff && (
+          <div className="flex items-center gap-2 pl-2 ml-1 border-l border-rim">
+            <div className="hidden sm:block text-right">
+              <div className="text-white text-xs font-semibold leading-tight">{staff.name}</div>
+              <div className="text-ash text-[10px] leading-tight capitalize">{staff.role}</div>
+            </div>
+            <button
+              onClick={logout}
+              className="text-ash hover:text-red-400 text-xs px-2 py-1.5 rounded hover:bg-red-500/10 transition-colors"
+              title="Log out"
+            >
+              ⏻
+            </button>
+          </div>
+        )}
       </div>
     </header>
   )
