@@ -6,11 +6,13 @@ import { formatKip, formatTime } from '@/lib/format'
 import StaffNav from '@/components/shared/StaffNav'
 import BillModal from './BillModal'
 import BCELPayModal from './BCELPayModal'
+import TableTransferModal from './TableTransferModal'
 
 export default function CashierDashboard() {
   const [tables, setTables] = useState([])
   const [billData, setBillData] = useState(null)   // { table, orders, total }
   const [payData, setPayData] = useState(null)      // { total, tableNumber }
+  const [transferTable, setTransferTable] = useState(null)  // table being moved/merged
   const [loading, setLoading] = useState(true)
   const [lang, setLang] = useState('lo')
 
@@ -117,6 +119,12 @@ export default function CashierDashboard() {
                       💰 {t('ເບິ່ງບິນ', 'View Bill')}
                     </button>
                     <button
+                      onClick={() => setTransferTable(table)}
+                      className="w-full surface hover:border-sky-400 text-ash hover:text-sky-400 text-sm py-2 rounded-xl transition-colors"
+                    >
+                      🔀 {t('ຍ້າຍ / ລວມໂຕະ', 'Move / Merge')}
+                    </button>
+                    <button
                       onClick={() => closeTable(table)}
                       className="w-full surface hover:border-red-500 text-ash hover:text-red-400 text-sm py-2 rounded-xl transition-colors"
                     >
@@ -167,6 +175,20 @@ export default function CashierDashboard() {
           total={payData.total}
           tableNumber={payData.tableNumber}
           onClose={() => setPayData(null)}
+        />
+      )}
+
+      {/* Table Transfer / Merge Modal */}
+      {transferTable && (
+        <TableTransferModal
+          sourceTable={transferTable}
+          allTables={tables}
+          lang={lang}
+          onClose={() => setTransferTable(null)}
+          onSuccess={() => {
+            setTransferTable(null)
+            fetchTables()
+          }}
         />
       )}
     </div>
