@@ -44,8 +44,9 @@ function QRPlaceholder({ amount, tableNumber }) {
   )
 }
 
-export default function BCELPayModal({ total, tableNumber, onClose }) {
+export default function BCELPayModal({ total, tableNumber, lang = 'lo', submitting, onClose, onConfirm }) {
   const amountFormatted = formatKipCompact(total)
+  const t = (lo, en) => lang === 'lo' ? lo : en
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" onClick={onClose}>
@@ -90,13 +91,21 @@ export default function BCELPayModal({ total, tableNumber, onClose }) {
           </div>
         </div>
 
-        {/* Close */}
-        <div className="px-5 py-4">
+        {/* Actions */}
+        <div className="px-5 py-4 space-y-2">
+          <button
+            onClick={onConfirm}
+            disabled={submitting}
+            className="w-full bg-[#004B87] hover:bg-[#003D70] disabled:opacity-60 text-white font-bold py-3.5 rounded-2xl transition-colors"
+          >
+            {submitting ? '...' : `✓ ${t('ລູກຄ້າຈ່າຍແລ້ວ', 'Customer Has Paid')}`}
+          </button>
           <button
             onClick={onClose}
-            className="w-full bg-[#004B87] hover:bg-[#003D70] text-white font-bold py-3.5 rounded-2xl transition-colors"
+            disabled={submitting}
+            className="w-full text-gray-500 hover:text-gray-700 font-semibold py-2 rounded-2xl transition-colors text-sm"
           >
-            ປິດ / Close
+            {t('ຍົກເລີກ', 'Cancel')}
           </button>
         </div>
       </div>

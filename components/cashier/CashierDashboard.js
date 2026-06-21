@@ -6,13 +6,18 @@ import { formatKip, formatTime } from '@/lib/format'
 import StaffNav from '@/components/shared/StaffNav'
 import BillModal from './BillModal'
 import BCELPayModal from './BCELPayModal'
+import CashPayModal from './CashPayModal'
+import Receipt80mm from './Receipt80mm'
 import TableTransferModal from './TableTransferModal'
 
 export default function CashierDashboard() {
   const [tables, setTables] = useState([])
   const [billData, setBillData] = useState(null)   // { table, orders, total }
-  const [payData, setPayData] = useState(null)      // { total, tableNumber }
+  const [paymentMethod, setPaymentMethod] = useState(null)  // { method: 'cash'|'bcel_onepay', total, table, items }
+  const [receiptData, setReceiptData] = useState(null)
+  const [submittingPayment, setSubmittingPayment] = useState(false)
   const [transferTable, setTransferTable] = useState(null)  // table being moved/merged
+  const [currentStaff, setCurrentStaff] = useState(null)
   const [loading, setLoading] = useState(true)
   const [lang, setLang] = useState('lo')
 
@@ -31,8 +36,18 @@ export default function CashierDashboard() {
 
   useEffect(() => {
     fetchTables()
-    // Realtime table status updates
+    // Load current staff for receipt attribution
     const supabase = getSupabase()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      const { data: staffRecord } = await supabase
+        .from('staff')
+        .select('id, name')
+        .eq('auth_user_id', user.id)
+        .single()
+      setCurrentStaff(staffRecord || null)
+    })
+    // Realtime table status updates
     const channel = supabase
       .channel('cashier:tables')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, fetchTables)
@@ -60,11 +75,63 @@ export default function CashierDashboard() {
     const total = (orders || []).flatMap(o => o.order_items).reduce(
       (sum, oi) => sum + oi.quantity * parseFloat(oi.menu_items?.price || 0), 0
     )
-    setBillData({ table, orders: orders || [], total })
+
+    // Aggregate items across all orders — used both in the bill view and the receipt
+    const itemMap = {}
+    for (const order of orders || []) {
+      for (const oi of order.order_items || []) {
+        const key = oi.menu_item_id
+        if (!itemMap[key]) {
+          itemMap[key] = {
+            name_lo: oi.menu_items?.name_lo,
+            name_en: oi.menu_items?.name_en,
+            price: parseFloat(oi.menu_items?.price || 0),
+            quantity: 0,
+          }
+        }
+        itemMap[key].quantity += oi.quantity
+      }
+    }
+
+    setBillData({ table, orders: orders || [], total, items: Object.values(itemMap) })
+  }
+
+  const confirmPayment = async ({ method, total, table, items, received = null, change = null }) => {
+    setSubmittingPayment(true)
+    const supabase = getSupabase()
+
+    const { data: receiptNumber, error } = await supabase.rpc('record_payment_and_close_table', {
+      p_table_number: table.table_number,
+      p_payment_method: method,
+      p_amount_total: total,
+      p_amount_received: received,
+      p_amount_change: change,
+    })
+
+    setSubmittingPayment(false)
+
+    if (error) {
+      alert(error.message || t('ເກີດຂໍ້ຜິດພາດ', 'Something went wrong'))
+      return
+    }
+
+    setPaymentMethod(null)
+    setReceiptData({
+      receiptNumber,
+      table,
+      items,
+      total,
+      paymentMethod: method,
+      amountReceived: received,
+      amountChange: change,
+      paidAt: new Date().toISOString(),
+      staffName: currentStaff?.name,
+    })
+    fetchTables()
   }
 
   const closeTable = async (table) => {
-    if (!confirm(t('ທ່ານແນ່ໃຈບໍ? ການປິດໂຕະຈະລຶບ session ນີ້', 'Close this table and clear the session?'))) return
+    if (!confirm(t('ທ່ານແນ່ໃຈບໍ? ການປິດໂຕະຈະລຶບ session ນີ້ ໂດຍບໍ່ມີການບັນທຶກການຈ່າຍເງິນ', 'Close this table without recording a payment?'))) return
     const supabase = getSupabase()
     await supabase
       .from('tables')
@@ -162,19 +229,54 @@ export default function CashierDashboard() {
           data={billData}
           lang={lang}
           onClose={() => setBillData(null)}
-          onPay={(total, tableNumber) => {
+          onPay={(method, total, table) => {
+            setPaymentMethod({ method, total, table, items: billData.items })
             setBillData(null)
-            setPayData({ total, tableNumber })
           }}
         />
       )}
 
+      {/* Cash Payment Modal */}
+      {paymentMethod?.method === 'cash' && (
+        <CashPayModal
+          total={paymentMethod.total}
+          lang={lang}
+          submitting={submittingPayment}
+          onClose={() => setPaymentMethod(null)}
+          onConfirm={({ received, change }) => confirmPayment({
+            method: 'cash',
+            total: paymentMethod.total,
+            table: paymentMethod.table,
+            items: paymentMethod.items,
+            received,
+            change,
+          })}
+        />
+      )}
+
       {/* BCEL Pay Modal */}
-      {payData && (
+      {paymentMethod?.method === 'bcel_onepay' && (
         <BCELPayModal
-          total={payData.total}
-          tableNumber={payData.tableNumber}
-          onClose={() => setPayData(null)}
+          total={paymentMethod.total}
+          tableNumber={paymentMethod.table.table_number}
+          lang={lang}
+          submitting={submittingPayment}
+          onClose={() => setPaymentMethod(null)}
+          onConfirm={() => confirmPayment({
+            method: 'bcel_onepay',
+            total: paymentMethod.total,
+            table: paymentMethod.table,
+            items: paymentMethod.items,
+          })}
+        />
+      )}
+
+      {/* Receipt — shown after successful payment */}
+      {receiptData && (
+        <Receipt80mm
+          paymentData={receiptData}
+          lang={lang}
+          onClose={() => setReceiptData(null)}
         />
       )}
 

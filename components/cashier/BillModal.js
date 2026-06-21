@@ -105,13 +105,22 @@ export default function BillModal({ data, lang, onClose, onPay }) {
             <span className="text-white font-bold text-lg">{t('ລວມທັງໝົດ', 'Total')}</span>
             <span className="text-gold font-black text-2xl">{formatKip(total)}</span>
           </div>
-          <button
-            onClick={() => onPay(total, table.table_number)}
-            className="w-full bg-ember hover:bg-orange-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors"
-          >
-            <span>📱</span>
-            <span>{t('ຈ່າຍຜ່ານ BCEL OnePay', 'Pay via BCEL OnePay')}</span>
-          </button>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => onPay('cash', total, table)}
+              className="bg-jade hover:bg-emerald-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors"
+            >
+              <span>💵</span>
+              <span>{t('ເງິນສົດ', 'Cash')}</span>
+            </button>
+            <button
+              onClick={() => onPay('bcel_onepay', total, table)}
+              className="bg-ember hover:bg-orange-600 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors"
+            >
+              <span>📱</span>
+              <span>{t('BCEL OnePay', 'BCEL OnePay')}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

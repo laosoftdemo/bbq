@@ -24,9 +24,14 @@ export default function StaffNav({ title, lang, onToggleLang }) {
           Cashier
         </Link>
         {staff?.role === 'admin' && (
-          <Link href="/admin/staff" className="text-ash hover:text-white text-xs px-2 py-1 rounded hover:bg-neutral-700 transition-colors hidden sm:block">
-            Admin
-          </Link>
+          <>
+            <Link href="/admin/staff" className="text-ash hover:text-white text-xs px-2 py-1 rounded hover:bg-neutral-700 transition-colors hidden sm:block">
+              Staff
+            </Link>
+            <Link href="/admin/exchange-rates" className="text-ash hover:text-white text-xs px-2 py-1 rounded hover:bg-neutral-700 transition-colors hidden sm:block">
+              Rates
+            </Link>
+          </>
         )}
         {/* Lang toggle */}
         <button
