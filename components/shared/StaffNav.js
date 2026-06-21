@@ -23,6 +23,11 @@ export default function StaffNav({ title, lang, onToggleLang }) {
         <Link href="/staff/cashier" className="text-ash hover:text-white text-xs px-2 py-1 rounded hover:bg-neutral-700 transition-colors hidden sm:block">
           Cashier
         </Link>
+        {staff?.role === 'admin' && (
+          <Link href="/admin/staff" className="text-ash hover:text-white text-xs px-2 py-1 rounded hover:bg-neutral-700 transition-colors hidden sm:block">
+            Admin
+          </Link>
+        )}
         {/* Lang toggle */}
         <button
           onClick={onToggleLang}

@@ -59,7 +59,17 @@ export default function LoginForm() {
         return
       }
 
-      router.push(redirectTo)
+      // If the user landed here via a specific protected-route redirect, honor that.
+      // Otherwise, send them to the page that matches their role.
+      const hasExplicitRedirect = searchParams.get('redirect')
+      let destination = redirectTo
+      if (!hasExplicitRedirect) {
+        if (staffRecord.role === 'admin') destination = '/admin/staff'
+        else if (staffRecord.role === 'cashier') destination = '/staff/cashier'
+        else destination = '/staff/kitchen'
+      }
+
+      router.push(destination)
       router.refresh()
     } catch (err) {
       console.error(err)
